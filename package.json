@@ -4,7 +4,9 @@
   "description": "Desktop Soundwave Visualizer & Video Studio",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "package": "electron-packager . SoundwaveStudio --platform=win32 --arch=x64 --out=dist --overwrite --asar"
   },
   "keywords": [
     "soundwave",
@@ -17,6 +19,26 @@
   "author": "Antigravity",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^31.0.0"
+    "electron": "^31.0.0",
+    "electron-builder": "^26.8.1",
+    "electron-packager": "^17.1.2"
+  },
+  "build": {
+    "appId": "com.vkmr007.soundwavestudio",
+    "productName": "SoundwaveStudio",
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    }
   }
 }

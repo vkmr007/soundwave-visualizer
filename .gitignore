@@ -26,3 +26,7 @@ Thumbs.db
 *.bmp
 *.mp4
 *.webm
+
+# Production builds
+dist/
+
