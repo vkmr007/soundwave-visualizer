@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win",
-    "package": "electron-packager . SoundwaveStudio --platform=win32 --arch=x64 --out=dist --overwrite --asar"
+    "package": "node scripts/build.js"
   },
   "keywords": [
     "soundwave",
