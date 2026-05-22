@@ -1,0 +1,22 @@
+{
+  "name": "soundwave-visualizer",
+  "version": "1.0.0",
+  "description": "Desktop Soundwave Visualizer & Video Studio",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "soundwave",
+    "visualizer",
+    "music",
+    "video",
+    "electron",
+    "desktop"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}

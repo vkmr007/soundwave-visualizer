@@ -1,0 +1,28 @@
+# Dependency directories
+node_modules/
+
+# Local logs and run configurations
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.system_generated/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# User test media files (keep repo lightweight)
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.aac
+*.ogg
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.bmp
+*.mp4
+*.webm

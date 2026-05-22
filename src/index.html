@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soundwave Visualizer Studio</title>
+  <!-- Google Fonts for premium typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Syne:wght@500;700;800&family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- LEFT SIDEBAR: Control Studio -->
+    <aside class="control-panel">
+      <header class="studio-header">
+        <div class="logo">
+          <div class="logo-orb"></div>
+          <h1>SOUNDWAVE</h1>
+          <span>STUDIO</span>
+        </div>
+      </header>
+
+      <div class="panel-sections">
+        
+        <!-- SECTION 1: Files & Media Selection -->
+        <section class="panel-section active">
+          <h2 class="section-title"><span class="icon">📁</span> Media Library</h2>
+          
+          <div class="control-group">
+            <label>1. Audio Song File</label>
+            <button id="btn-select-audio" class="btn btn-primary select-btn">
+              <span class="btn-icon">🎵</span>
+              <span id="label-audio-file">Select Song File</span>
+            </button>
+            <div id="audio-meta" class="file-meta-tag hidden">No audio loaded</div>
+          </div>
+
+          <div class="control-group">
+            <label>2. Background Image</label>
+            <button id="btn-select-bg" class="btn btn-secondary select-btn">
+              <span class="btn-icon">🖼️</span>
+              <span id="label-bg-file">Select Background Image</span>
+            </button>
+            <div id="bg-meta" class="file-meta-tag hidden">Default Starfield active</div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Visualizer Wave Designs -->
+        <section class="panel-section">
+          <h2 class="section-title"><span class="icon">🎨</span> Wave Design</h2>
+          
+          <div class="control-group">
+            <label for="visualizer-style">Soundwave Style</label>
+            <select id="visualizer-style" class="custom-select">
+              <option value="linear-bars">Glowing Linear Bars</option>
+              <option value="circular-ring">Circular Ripple Rings</option>
+              <option value="fluid-wave">Fluid Wave Curves</option>
+              <option value="starburst-particles">Radial Starburst Particles</option>
+              <option value="digital-matrix">Digital Matrix HUD</option>
+              <option value="oscilloscope">Neon Oscilloscope</option>
+              <option value="orbit-sphere">3D Wireframe Orbit</option>
+              <option value="mirrored-border">Mirrored Wave Borders</option>
+              <option value="voice-assistant">AI Voice Assistant Wave</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label>Color Theme</label>
+            <div class="color-options-row">
+              <input type="color" id="color-primary" value="#00f2fe" title="Primary Color">
+              <input type="color" id="color-secondary" value="#4facfe" title="Secondary Color">
+              <select id="color-mode" class="custom-select-small">
+                <option value="gradient">Gradient Blend</option>
+                <option value="solid">Solid primary</option>
+                <option value="hsl-shift">Dynamic Rainbow</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="slider-glow">Glow Intensity</label>
+              <span id="val-glow">20px</span>
+            </div>
+            <input type="range" id="slider-glow" min="0" max="60" value="20" class="custom-range">
+          </div>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="slider-sensitivity">Audio Sensitivity</label>
+              <span id="val-sensitivity">1.5x</span>
+            </div>
+            <input type="range" id="slider-sensitivity" min="0.5" max="3" step="0.1" value="1.5" class="custom-range">
+          </div>
+        </section>
+
+        <!-- SECTION 3: Custom Layout, Positioning & Resizing -->
+        <section class="panel-section">
+          <h2 class="section-title"><span class="icon">📐</span> Position & Size</h2>
+          <p class="section-subtitle">Move and resize the wave animation anywhere in the frame.</p>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="slider-scale">Visualizer Size Scale</label>
+              <span id="val-scale">1.0x</span>
+            </div>
+            <input type="range" id="slider-scale" min="0.2" max="2.5" step="0.05" value="1.0" class="custom-range">
+          </div>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="slider-pos-x">X-Position (Horizontal)</label>
+              <span id="val-pos-x">Center</span>
+            </div>
+            <input type="range" id="slider-pos-x" min="-100" max="100" value="0" class="custom-range">
+          </div>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="slider-pos-y">Y-Position (Vertical)</label>
+              <span id="val-pos-y">Center</span>
+            </div>
+            <input type="range" id="slider-pos-y" min="-100" max="100" value="0" class="custom-range">
+          </div>
+
+          <!-- Dynamic contextual controls -->
+          <div class="control-group conditional-control" id="control-linear-only">
+            <div class="slider-header">
+              <label for="slider-bar-width">Bar Width</label>
+              <span id="val-bar-width">6px</span>
+            </div>
+            <input type="range" id="slider-bar-width" min="2" max="25" value="6" class="custom-range">
+          </div>
+
+          <div class="control-group conditional-control hidden" id="control-circular-only">
+            <div class="slider-header">
+              <label for="slider-inner-radius">Circle Inner Radius</label>
+              <span id="val-inner-radius">120px</span>
+            </div>
+            <input type="range" id="slider-inner-radius" min="30" max="300" value="120" class="custom-range">
+          </div>
+        </section>
+
+        <!-- SECTION 4: Typography & Overlay -->
+        <section class="panel-section">
+          <h2 class="section-title"><span class="icon">✏️</span> Text Overlays</h2>
+          
+          <div class="control-group">
+            <label for="input-title">Song Title</label>
+            <input type="text" id="input-title" placeholder="E.g., Moonlight Sonar" class="custom-input">
+          </div>
+
+          <div class="control-group">
+            <label for="input-artist">Artist / Subtitle</label>
+            <input type="text" id="input-artist" placeholder="E.g., Synthwave Echo" class="custom-input">
+          </div>
+
+          <div class="control-group">
+            <label for="select-font">Typography Style</label>
+            <select id="select-font" class="custom-select">
+              <option value="Syne">Syne (Futuristic Bold)</option>
+              <option value="Outfit">Outfit (Sleek Modern)</option>
+              <option value="Montserrat">Montserrat (Classic Clean)</option>
+              <option value="Playfair Display">Playfair Display (Elegant Serif)</option>
+              <option value="Space Grotesk">Space Grotesk (Tech Monospace)</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label class="checkbox-container">
+              <input type="checkbox" id="check-beat-react" checked>
+              <span class="checkmark"></span>
+              Beat Reactive Text (Pulses to Audio Bass)
+            </label>
+          </div>
+        </section>
+
+        <!-- SECTION 5: Video Export Engine -->
+        <section class="panel-section">
+          <h2 class="section-title"><span class="icon">📹</span> Export Studio</h2>
+          
+          <div class="control-group">
+            <label for="select-aspect-ratio">Aspect Ratio / Layout</label>
+            <select id="select-aspect-ratio" class="custom-select">
+              <option value="16-9">Widescreen 16:9 (1920x1080) - YouTube</option>
+              <option value="9-16">Vertical 9:16 (1080x1920) - Shorts/TikTok</option>
+              <option value="1-1">Square 1:1 (1080x1080) - Instagram</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="select-fps">Export Framerate</label>
+            <select id="select-fps" class="custom-select">
+              <option value="60">60 FPS (Ultra Smooth)</option>
+              <option value="30">30 FPS (Standard)</option>
+            </select>
+          </div>
+
+          <div class="export-actions">
+            <button id="btn-export" class="btn btn-record" disabled>
+              <span class="record-dot"></span>
+              <span id="label-export">Export Music Video</span>
+            </button>
+          </div>
+        </section>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT CONTENT: Live Interactive Preview Studio -->
+    <main class="preview-area">
+      <!-- Top header bar for quick diagnostics -->
+      <div class="preview-top-bar">
+        <div class="diagnostic-tag"><span class="diag-bullet" id="diag-status-color"></span> Status: <span id="diag-status">Idle</span></div>
+        <div class="diagnostic-tag">Bass Peak: <span id="diag-bass">0.00</span></div>
+        <div class="diagnostic-tag bpm-pill">Est. BPM: <span id="diag-bpm">--</span></div>
+        <div class="diagnostic-tag">Active Resolution: <span id="diag-resolution">1920 x 1080</span></div>
+      </div>
+
+      <!-- MAIN WORKSPACE: Visual Preview Aspect-Ratio Frame Container -->
+      <div class="preview-viewport-container">
+        <!-- Live drag/position helper overlay info -->
+        <div class="interactive-helper">Drag slider coordinates to adjust soundwave location</div>
+        
+        <!-- The actual video aspect ratio container -->
+        <div class="video-frame-container" id="video-frame-outer">
+          <canvas id="visualizer-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- BOTTOM NAVIGATION: Studio Audio Controls -->
+      <footer class="player-controls">
+        <div class="control-row">
+          
+          <button id="btn-play-pause" class="player-btn disabled" disabled>
+            <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="pause-icon hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          
+          <div class="track-timeline">
+            <span id="current-time">00:00</span>
+            <div class="waveform-seekbar-container">
+              <!-- SoundCloud style custom seekbar -->
+              <input type="range" id="seek-slider" min="0" value="0" max="100" class="seek-bar" disabled>
+              <div class="seek-progress" id="seek-progress-fill"></div>
+            </div>
+            <span id="total-duration">00:00</span>
+          </div>
+
+          <div class="volume-container">
+            <span class="volume-icon">🔊</span>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" class="volume-bar">
+          </div>
+
+        </div>
+      </footer>
+    </main>
+
+    <!-- Hidden audio element for Web Audio API input -->
+    <audio id="audio-element" crossOrigin="anonymous"></audio>
+
+    <!-- EXPORT MODAL overlay when writing to local disk -->
+    <div id="export-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="export-pulse-ring"></div>
+        <h2>Rendering Music Video</h2>
+        <p>Your audio and soundwaves are being rendered to a file.</p>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="export-progress"></div>
+        </div>
+        <div class="export-stats">
+          <div>Time Encoded: <span id="export-time">00:00</span></div>
+          <div>Status: <span id="export-status-label">Writing stream...</span></div>
+        </div>
+        <button id="btn-stop-export" class="btn btn-danger">Stop & Save Video</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
