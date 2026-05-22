@@ -31,4 +31,9 @@ Thumbs.db
 dist/*
 !dist/SoundwaveStudio-win32-x64/
 
+# Allow repository assets
+!images/
+!images/**
+
+
 
