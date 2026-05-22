@@ -1,6 +1,6 @@
 {
   "name": "soundwave-visualizer",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Desktop Soundwave Visualizer & Video Studio",
   "main": "main.js",
   "scripts": {

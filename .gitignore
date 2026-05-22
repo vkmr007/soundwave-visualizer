@@ -28,5 +28,7 @@ Thumbs.db
 *.webm
 
 # Production builds
-dist/
+dist/*
+!dist/SoundwaveStudio-win32-x64/
+
 
