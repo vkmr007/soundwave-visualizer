@@ -237,7 +237,7 @@ function setupEventListeners() {
     if (activeStyle === 'linear-bars') {
       controlLinearOnly.classList.remove('hidden');
       controlCircularOnly.classList.add('hidden');
-    } else if (activeStyle === 'circular-ring') {
+    } else if (['circular-ring', 'water-ripple', 'orbit-sphere', 'matrix-sphere', 'voice-blobs'].includes(activeStyle)) {
       controlLinearOnly.classList.add('hidden');
       controlCircularOnly.classList.remove('hidden');
     } else {
@@ -584,6 +584,18 @@ function drawVisualizer(style, data, timeData, bass, mid, treble, volume) {
     drawMirroredBorder(data, bass, mid);
   } else if (style === 'voice-assistant') {
     drawVoiceAssistant(data, bass, mid, volume);
+  } else if (style === 'water-ripple') {
+    drawWaterRipple(data, bass, mid, treble);
+  } else if (style === 'glow-ribbon') {
+    drawGlowRibbon(data, bass, mid);
+  } else if (style === 'eq-ribbon') {
+    drawEqRibbon(data, bass, mid, treble);
+  } else if (style === 'voice-blobs') {
+    drawVoiceBlobs(data, bass, mid, volume);
+  } else if (style === 'matrix-sphere') {
+    drawMatrixSphere(data, bass, mid);
+  } else if (style === 'neon-fiber') {
+    drawNeonFiber(data, bass, mid, treble);
   }
   
   ctx.shadowBlur = 0; // reset glow
@@ -1258,6 +1270,416 @@ function drawVoiceAssistant(data, bass, mid, volume) {
       } else {
         ctx.lineTo(x, y);
       }
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// Design style 10: Digital Water Ripple (Shutterstock 2653154933)
+let rippleParticles = [];
+function drawWaterRipple(data, bass, mid, treble) {
+  const maxRadius = 400;
+  const rippleCount = 5;
+  const baseRadius = innerRadiusSetting + (bass * 35);
+  const time = visualizerTime / 1000;
+
+  ctx.save();
+  
+  // 1. Center pulsing core (liquid droplet)
+  const gradCore = ctx.createRadialGradient(0, 0, baseRadius * 0.1, 0, 0, baseRadius * 0.8);
+  gradCore.addColorStop(0, '#ffffff');
+  gradCore.addColorStop(0.3, primaryColor);
+  gradCore.addColorStop(1, 'rgba(0, 242, 254, 0)');
+  ctx.fillStyle = gradCore;
+  ctx.beginPath();
+  ctx.arc(0, 0, baseRadius * 0.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Concentric ripples
+  ctx.lineWidth = 2.5;
+  for (let i = 0; i < rippleCount; i++) {
+    // Each ripple has its own expanding phase
+    const phase = (time * 0.3 + i / rippleCount) % 1.0;
+    const radius = baseRadius + phase * (maxRadius - baseRadius);
+    const alpha = (1.0 - phase) * (0.15 + mid * 0.5);
+
+    ctx.strokeStyle = primaryColor;
+    ctx.shadowColor = primaryColor;
+    ctx.shadowBlur = glowIntensity * (1 - phase);
+    ctx.globalAlpha = alpha;
+
+    ctx.beginPath();
+    const points = 80;
+    for (let p = 0; p <= points; p++) {
+      const angle = (p / points) * Math.PI * 2;
+      const fIdx = Math.floor((p / points) * (bufferLength * 0.4));
+      const val = (data[fIdx] * sensitivity) / 255;
+      
+      // Liquid wiggle math
+      const wiggle = Math.sin(angle * 12 + time * 8) * 15 * val;
+      const r = radius + wiggle;
+
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+
+      if (p === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  // 3. Ripple floating particles
+  if (rippleParticles.length < 100) {
+    rippleParticles.push({
+      angle: Math.random() * Math.PI * 2,
+      dist: baseRadius + Math.random() * 50,
+      speed: Math.random() * 1.5 + 0.8,
+      size: Math.random() * 2 + 1,
+      wiggleSpeed: Math.random() * 4 + 2,
+      phase: Math.random() * Math.PI
+    });
+  }
+
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = secondaryColor;
+  ctx.shadowColor = secondaryColor;
+  ctx.shadowBlur = glowIntensity * 0.5;
+
+  for (let idx = rippleParticles.length - 1; idx >= 0; idx--) {
+    const rp = rippleParticles[idx];
+    const fIdx = Math.floor((rp.angle / (Math.PI * 2)) * (bufferLength * 0.5));
+    const intensity = (data[fIdx] * sensitivity) / 255;
+
+    rp.dist += rp.speed * (1 + bass * 2) + intensity * 2;
+    rp.phase += 0.05 * rp.wiggleSpeed;
+
+    // Organic wavy paths
+    const curAngle = rp.angle + Math.sin(rp.phase) * 0.05;
+    const x = Math.cos(curAngle) * rp.dist;
+    const y = Math.sin(curAngle) * rp.dist;
+
+    // Reset if particle moves beyond boundary
+    if (rp.dist > maxRadius) {
+      rp.dist = baseRadius + Math.random() * 20;
+      rp.angle = Math.random() * Math.PI * 2;
+      continue;
+    }
+
+    ctx.beginPath();
+    ctx.arc(x, y, rp.size * (1 + intensity * 1.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// Design style 11: Volumetric Glow Ribbon (Shutterstock 2770068617)
+function drawGlowRibbon(data, bass, mid) {
+  const ribbonCount = 5;
+  const width = 800;
+  const points = 100;
+  const time = visualizerTime / 250;
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineWidth = 2;
+
+  const ribbonColors = [
+    'rgba(0, 242, 254, 0.45)',  // Cyan
+    'rgba(79, 172, 254, 0.4)',   // Cyan Blue
+    'rgba(127, 0, 255, 0.35)',   // Violet Purple
+    'rgba(255, 0, 127, 0.3)',    // Fuchsia
+    'rgba(255, 255, 255, 0.25)'  // White Core
+  ];
+
+  for (let r = 0; r < ribbonCount; r++) {
+    ctx.strokeStyle = ribbonColors[r];
+    ctx.shadowColor = ribbonColors[r];
+    ctx.shadowBlur = glowIntensity * 0.8;
+
+    // Create unique amplitude and wave characteristics per layer
+    const phaseOffset = r * (Math.PI / ribbonCount);
+    const speed = time * (0.8 + r * 0.15);
+
+    ctx.beginPath();
+    for (let i = 0; i <= points; i++) {
+      const pct = i / points;
+      const x = -width / 2 + pct * width;
+
+      // Audio mapping
+      const fIdx = Math.floor(pct * (bufferLength * 0.4));
+      const val = (data[fIdx] * sensitivity) / 255;
+
+      // Gabor envelope
+      const envelope = Math.pow(Math.sin(pct * Math.PI), 2.5);
+
+      // Math wave logic to form 3D dimensional ribbons
+      const wave = Math.sin(pct * Math.PI * 5 + speed + phaseOffset) * 45 * (1 + bass * 0.6);
+      const noise = Math.cos(pct * Math.PI * 12 - speed) * 12 * mid;
+      const y = (wave + noise) * val * envelope + Math.sin(time * 0.5 + r) * 10 * envelope;
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// Design style 12: Equalizer Wave Ribbons (Shutterstock 1925468375)
+function drawEqRibbon(data, bass, mid, treble) {
+  const bands = 4;
+  const width = 800;
+  const points = 60;
+  const time = visualizerTime / 300;
+
+  ctx.save();
+  ctx.globalAlpha = 0.35; // Glass translucent overlap
+  ctx.globalCompositeOperation = 'screen';
+
+  // Bright, premium neon color themes matching Shutterstock 1925468375
+  const gradients = [
+    { start: '#ff007f', end: '#7f00ff' }, // Fuchsia to Violet (Bass)
+    { start: '#00f2fe', end: '#4facfe' }, // Cyan to Blue (Mids)
+    { start: '#00ff7f', end: '#00bfff' }, // Emerald to Ocean (High-Mids)
+    { start: '#ffaa00', end: '#ff007f' }  // Amber to Pink (Treble)
+  ];
+
+  for (let b = 0; b < bands; b++) {
+    const info = gradients[b];
+    const grad = ctx.createLinearGradient(-width / 2, 0, width / 2, 0);
+    grad.addColorStop(0, info.start);
+    grad.addColorStop(1, info.end);
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = info.start;
+    ctx.lineWidth = 1.5;
+
+    ctx.beginPath();
+    ctx.moveTo(-width / 2, 100);
+
+    for (let i = 0; i <= points; i++) {
+      const pct = i / points;
+      const x = -width / 2 + pct * width;
+
+      // Filter frequency range per band
+      const startIdx = Math.floor(b * (bufferLength * 0.15));
+      const endIdx = Math.floor((b + 1) * (bufferLength * 0.15));
+      let sum = 0;
+      for (let j = startIdx; j < endIdx; j++) {
+        sum += data[j];
+      }
+      const val = ((sum / (endIdx - startIdx)) * sensitivity) / 255;
+
+      const envelope = Math.sin(pct * Math.PI);
+      const wavePhase = time * 1.5 + b * 2;
+      const wave = Math.sin(pct * Math.PI * 4 + wavePhase) * 35;
+      
+      // Compute vertical offset (curving upward from baseline)
+      const y = -100 - (val * 160 + wave) * envelope;
+
+      ctx.lineTo(x, y);
+    }
+
+    // Connect to baseline to close filled shape
+    ctx.lineTo(width / 2, 100);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// Design style 13: Orbital Voice Blobs (Shutterstock 2416549429)
+function drawVoiceBlobs(data, bass, mid, volume) {
+  const blobCount = 4;
+  const time = visualizerTime / 400;
+  
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.shadowBlur = glowIntensity * 1.2;
+
+  // Modern Google/Siri assistant pastel-neon hues
+  const colors = [
+    { rgb: '#00f2fe', bandIdx: 2 },   // Aqua / Blue
+    { rgb: '#ff007f', bandIdx: 6 },   // Pink / Red
+    { rgb: '#7f00ff', bandIdx: 15 },  // Purple / Violet
+    { rgb: '#00ff7f', bandIdx: 25 }   // Lime / Green
+  ];
+
+  for (let b = 0; b < blobCount; b++) {
+    const item = colors[b];
+    ctx.fillStyle = item.rgb;
+    ctx.shadowColor = item.rgb;
+
+    // Retrieve specific frequency band for this blob
+    const fVal = (data[item.bandIdx] * sensitivity) / 255;
+
+    // Organic idle drift + audio reaction scale
+    const driftX = Math.sin(time + b * Math.PI / 2) * 50;
+    const driftY = Math.cos(time * 0.7 + b * 1.5) * 20;
+
+    // Compute dimensions of morphed capsule shape
+    const baseW = innerRadiusSetting * 0.7;
+    const baseH = innerRadiusSetting * 0.9;
+    const scaleW = 1.0 + mid * 0.4 + driftX * 0.002;
+    const scaleH = 1.0 + fVal * 1.4 + volume * 0.5;
+
+    const w = baseW * scaleW;
+    const h = baseH * scaleH;
+
+    // Center placement + offset separation
+    const posX = driftX + (b - (blobCount - 1) / 2) * (baseW * 0.45);
+    const posY = driftY;
+
+    // Draw rounded capsule blob
+    ctx.beginPath();
+    ctx.roundRect(posX - w / 2, posY - h / 2, w, h, Math.min(w, h) / 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// Design style 14: Digital Matrix Sphere (Shutterstock 2419414219)
+function drawMatrixSphere(data, bass, mid) {
+  const radius = innerRadiusSetting * 0.9 + bass * 35;
+  const latitudeLines = 7;
+  const longitudePoints = 20;
+  const time = visualizerTime / 800;
+
+  ctx.save();
+  ctx.strokeStyle = primaryColor;
+  ctx.fillStyle = secondaryColor;
+  ctx.shadowColor = primaryColor;
+  ctx.shadowBlur = glowIntensity * 0.6;
+
+  // Rotate entire system
+  ctx.rotate(time * 0.15);
+
+  const vertices = [];
+
+  // 1. Calculate 3D sphere point projection coordinates
+  for (let lat = 1; lat < latitudeLines; lat++) {
+    const theta = (lat / latitudeLines) * Math.PI; // latitude angle
+    const sinTheta = Math.sin(theta);
+    const cosTheta = Math.cos(theta);
+
+    for (let lon = 0; lon < longitudePoints; lon++) {
+      const phi = (lon / longitudePoints) * Math.PI * 2 + time; // longitude angle
+      
+      const fIdx = Math.floor((lon / longitudePoints) * (bufferLength * 0.4));
+      const val = (data[fIdx] * sensitivity) / 255;
+      
+      // Dynamic radius expansion based on audio frequency
+      const curRadius = radius * (1 + val * 0.35);
+
+      // Spherical coordinate system standard mapping
+      let x3d = curRadius * sinTheta * Math.cos(phi);
+      let y3d = curRadius * sinTheta * Math.sin(phi);
+      let z3d = curRadius * cosTheta;
+
+      // 3D perspective rotation around Y and X axis
+      const cosY = Math.cos(0.5);
+      const sinY = Math.sin(0.5);
+      const xRot = x3d * cosY - z3d * sinY;
+      const zRot = x3d * sinY + z3d * cosY;
+
+      // Perspective projection factor
+      const fov = 500;
+      const scale = fov / (fov + zRot);
+      const projX = xRot * scale;
+      const projY = y3d * scale;
+
+      vertices.push({ x: projX, y: projY, intensity: val });
+    }
+  }
+
+  // 2. Draw matrix grid lines connecting nodes
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < vertices.length; i++) {
+    const v1 = vertices[i];
+    ctx.globalAlpha = 0.08 + v1.intensity * 0.25;
+
+    // Connect to adjacent node on same latitude ring
+    const nextRingNode = vertices[(i + 1) % longitudePoints + Math.floor(i / longitudePoints) * longitudePoints];
+    ctx.beginPath();
+    ctx.moveTo(v1.x, v1.y);
+    ctx.lineTo(nextRingNode.x, nextRingNode.y);
+    ctx.stroke();
+
+    // Connect to node on next latitude line
+    const nextLatIdx = i + longitudePoints;
+    if (nextLatIdx < vertices.length) {
+      const v2 = vertices[nextLatIdx];
+      ctx.beginPath();
+      ctx.moveTo(v1.x, v1.y);
+      ctx.lineTo(v2.x, v2.y);
+      ctx.stroke();
+    }
+  }
+
+  // 3. Draw nodes (glowing intersections)
+  ctx.globalAlpha = 0.85;
+  for (let i = 0; i < vertices.length; i++) {
+    const v = vertices[i];
+    const nodeSize = (1.5 + v.intensity * 4.5) * scaleFactor;
+    ctx.beginPath();
+    ctx.arc(v.x, v.y, nodeSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// Design style 15: Neon Fiber Wavefront (Shutterstock 2174901063)
+function drawNeonFiber(data, bass, mid, treble) {
+  const lineCount = 45;
+  const width = 800;
+  const points = 80;
+  const time = visualizerTime / 500;
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineWidth = 0.65;
+  ctx.shadowBlur = glowIntensity * 0.45;
+
+  for (let l = 0; l < lineCount; l++) {
+    // Unique phase and fractional frequency scales for cosmic thread visuals
+    const phaseOffset = l * (Math.PI * 2 / lineCount);
+    const waveFreq = 3 + (l * 0.05);
+
+    // Dynamic gradient color fade across threads
+    const alpha = 0.06 + (1 - l / lineCount) * 0.12 + mid * 0.15;
+    ctx.strokeStyle = colorMode === 'hsl-shift' 
+      ? `hsla(${(l * 8 + time * 100) % 360}, 100%, 65%, ${alpha})`
+      : `${primaryColor}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
+    ctx.shadowColor = primaryColor;
+
+    ctx.beginPath();
+    for (let i = 0; i <= points; i++) {
+      const pct = i / points;
+      const x = -width / 2 + pct * width;
+
+      // Audio data frequency index mapping
+      const fIdx = Math.floor(pct * (bufferLength * 0.5));
+      const val = (data[fIdx] * sensitivity) / 255;
+
+      // Shape envelope (flat edges, dynamic middle)
+      const envelope = Math.pow(Math.sin(pct * Math.PI), 2.2);
+
+      // Thread weave math
+      const wigglePhase = time * 2.5 + phaseOffset;
+      const wave = Math.sin(pct * Math.PI * waveFreq + wigglePhase) * 65 * (1 + treble * 0.8);
+      const noise = Math.cos(pct * Math.PI * 8 - wigglePhase) * 15 * bass;
+      const y = (wave + noise) * val * envelope;
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     }
     ctx.stroke();
   }
